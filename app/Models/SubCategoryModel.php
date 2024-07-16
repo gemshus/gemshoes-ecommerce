@@ -17,15 +17,23 @@ class SubCategoryModel extends Model
         return self::find($id);
     }
 
+    static public function getSingleSlug($slug)
+    {
+        return self::where('slug', '=', $slug)
+        ->where('sub_category.status', '=', 0)
+        ->where('sub_category.is_delete', '=', 0)
+        ->first();
+    }
+
     static public function getRecord()
     {
-        return self::from('sub_category')
+        return self::select('sub_category.*', 'users.name as created_by_name', 'category.name as category_name')
+        //from('sub_category')
                    ->join('category', 'category.id', '=', 'sub_category.category_id')
                    ->join('users', 'users.id', '=', 'sub_category.created_by')
-                   ->select('sub_category.*', 'users.name as created_by_name', 'category.name as category_name')
                    ->where('sub_category.is_delete', '=', 0)
                    ->orderBy('sub_category.id', 'desc')
-                   ->paginate(1);
+                   ->paginate(10);
 
 
     }
@@ -43,6 +51,14 @@ class SubCategoryModel extends Model
                    ->get();
 
 
+    }
+
+    public function TotalProduct()
+    {
+        return $this->hasMany(ProductModel::class, 'sub_category_id')
+                    ->where('product.is_delete', '=', 0)
+                    ->where('product.status', '=', 0)
+                    ->count();
     }
 }
 

@@ -32,7 +32,7 @@
                             <div class="card card-primary">
                               <!-- form start -->
 
-                              <form action="" method="POST">
+                              <form action="" method="POST" enctype="multipart/form-data">
 
                                  {{@csrf_field()}}
 
@@ -100,21 +100,28 @@
                                             </select>
                                     </div>
                                 </div>
+                            </div>
 
-                                    <div class="col-md-6">
+                            <div class="row">
+                                    <div class="col-md-12">
                                         <div class="form-group">
                                             <label >Color <span style="color: red">*</span></label>
-                                            <select class="form-control" name="brand_id">
-                                                <option value="">Black</option>
                                                 @foreach($getColor as $color)
+                                                @php
+                                                         $checked = '';
+                                                     @endphp
+                                                   @foreach ($product->getColor as $pcolor)
 
-                                            <option value="{{ $color->id}}"> {{ $color->name}} </option>
-
+                                                     @if($pcolor->color_id == $color->id)
+                                                     @php
+                                                         $checked = 'checked';
+                                                     @endphp
+                                                     @endif
+                                                   @endforeach
+                                             <div>
+                                            <label><input {{ $checked }} type="checkbox" name="color_id[]" value="{{ $color->id}}"> {{ $color->name}} </label>
+                                             </div>
                                                     @endforeach
-
-
-                                            </select>
-
                                           </div>
                                     </div>
                                 </div>
@@ -126,7 +133,7 @@
                                         <div class="form-group">
                                             <label >Size <span style="color: red">*</span></label>
                                         <div>
-                                            <table class="table table-stripe">
+                                            <table class="table table-striped">
                                                 <thead>
                                                 <tr>
                                                     <th> Name </th>
@@ -136,19 +143,34 @@
                                                 </thead>
 
                                                 <tbody id="AppendSize">
+                                                    @foreach($product->getSize as $size)
                                                     <tr>
                                                         <td>
-                                                            <input type="text" name="" placeholder="Size" class="form-control">
+                                                            <input type="text" value="{{ $size->name }}" name="size[100][name]" placeholder="Name" class="form-control">
                                                         </td>
                                                         <td>
-                                                            <input type="text" name="" placeholder="Price" class="form-control">
+                                                            <input type="text" value="{{ $size->price }}" name="size[100][price]" placeholder="Price" class="form-control">
+                                                        </td>
+
+                                                        <td>
+                                                            <button type="button" class="btn btn-danger DeleteSize ">Delete</button>
+                                                        </td>
+                                                    </tr>
+                                                    @endforeach
+
+                                                    <tr>
+                                                        <td>
+                                                            <input type="text" name="size[100][name]" placeholder="Name" class="form-control">
+                                                        </td>
+                                                        <td>
+                                                            <input type="text" name="size[100][price]" placeholder="Price" class="form-control">
                                                         </td>
 
                                                         <td>
                                                             <button type="button" class="btn btn-primary AddSize ">Add</button>
                                                         </td>
-
                                                     </tr>
+
                                                 </tbody>
                                             </table>
                                         </div>
@@ -184,6 +206,33 @@
                                           </div>
                                     </div>
                                 </div>
+
+                                <hr>
+
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="form-group">
+                                            <label >Image <span style="color: red">*</span></label>
+                                           <input type="file" name="image[]" class="form-control" multiple accept="image/*">
+                                          </div>
+                                    </div>
+                                </div>
+
+                                @if(!empty($product->getImage->count()))
+                                <div class="row" id="sortable">
+                                    @foreach($product->getImage as $image)
+                                    @if($image !== null)
+
+                                    <div class="col-md-1 sortable_image" id="{{ $image->id }}" style="text-align: center">
+                                        <img style="width: 60%;height:100px;" src="{{ $image->getlogo()}}">
+                                        <a  onclick="return confirm('Are you sure you want to delete this item?');" href="{{ url('admin/product/image_delete/' .$image->id)}}" style="margin-top: 10px;" class="btn btn-danger btn-sm">Delete</a>
+                                    </div>
+                                      @endif
+                                    @endforeach
+                                </div>
+                                @endif
+
+                                <hr>
 
                                 <div class="row">
                                     <div class="col-md-12">
@@ -257,19 +306,51 @@
   @section('script')
 
   <script src="{{url('public/assets/plugins/summernote/summernote-bs4.min.js')}}"></script>
+  <script src="{{ url('public/assets/sortable/jquery-ui.js') }}"></script>
+
     <script type="text/javascript">
 
-    ChangeCategory
-    $('.editor').summernote('pasteHTML', '');
+    $(document).ready(function() {
+        $( "#sortable" ).sortable({
+            update : function(event, ui) {
+            var photo_id = new Array();
+            $('.sortable_image').each(function() {
+                  var id = $(this).attr('id');
+                  photo_id.push(id);
+            });
 
-    var i = 1000;
+            $.ajax({
+            type : "POST",
+            url : "{{ url('admin/product_image_sortable') }}",
+            data : {
+                 "photo_id" : photo_id,
+                 "_token": "{{ csrf_token()}}"
+            },
+
+            dataType: "json",
+            success: function(data) {
+
+            },
+            error:function (data) {
+
+            }
+        });
+
+            }
+        });
+    });
+
+
+   <!-- $('.editor').summernote('pasteHTML', '');-->
+
+    var i = 101;
       $('body').delegate('.AddSize', 'click', function(){
      var html = ' <tr id="DeleteSize'+i+'">\n\
             <td>\n\
-            <input type="text" name="" placeholder="Size" class="form-control">\n\
+            <input type="text" name="size['+i+'][name]" placeholder="Name" class="form-control">\n\
             </td>\n\
             <td>\n\
-            <input type="text" name="" placeholder="Price" class="form-control">\n\
+            <input type="text" name="size['+i+'][price]" placeholder="Price" class="form-control">\n\
             </td>\n\
             <td>\n\
              <button type="button" id="'+i+'" class="btn btn-danger DeleteSize ">Delete</button>\n\
@@ -284,7 +365,8 @@
              $('#DeleteSize'+id).remove();
       });
 
-      $('body').delegate('#ChangeCategory', 'change', function(e){
+      ChangeCategory
+      $(document).on('change', '#ChangeCategory', function(e){
         var id = $(this).val();
         $.ajax({
             type : "POST",
@@ -296,11 +378,17 @@
 
             dataType: "json",
             success: function(data) {
-                $('#getSubCategory').html(data.html);
-
+                if(data.error)
+                {
+                    alert(data.error)
+                }
+                else
+                {
+                    $('#getSubCategory').html(data.html);
+                }
             },
-            error:function (data) {
-
+            error:function (xhr, status, error) {
+                alert('Error:' + error);
             }
         });
       });

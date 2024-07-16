@@ -9,6 +9,8 @@ use App\Http\Controllers\Admin\SubCategoryController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\BrandController;
 use App\Http\Controllers\Admin\ColorController;
+use App\Http\Controllers\HomeController;
+use App\Http\Controllers\ProductController as ProductFront;
 
 
 
@@ -70,9 +72,15 @@ Route::post('admin/product/add', [ProductController::class, 'insert']);
 Route::get('admin/product/edit/{id}', [ProductController::class, 'edit']);
 Route::post('admin/product/edit/{id}', [ProductController::class, 'update']);
 
+Route::get('admin/product/image_delete/{id}', [ProductController::class, 'image_delete']);
+Route::post('admin/product_image_sortable', [ProductController::class, 'product_image_sortable']);
+
+
 });
 
 
-Route::get('/', function () {
-    return view('Welcome');
-});
+Route::get('/', [HomeController::class, 'home']);
+Route::get('search', [ProductFront::class, 'getProductSearch']);
+Route::post('get_filter_product_ajax', [ProductFront::class, 'getFilterProductAjax']);
+Route::get('{category?}/{subcategory?}', [ProductFront::class, 'getCategory']);
+
